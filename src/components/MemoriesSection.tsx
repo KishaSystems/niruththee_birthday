@@ -1,297 +1,149 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera, ChevronLeft, ChevronRight, X, Plus, Sparkles, Image as ImageIcon } from 'lucide-react';
-import { MemoryPhoto } from '../types';
+import React, { useState } from 'react';
+import { Heart, Smile, MessageCircle, Flame, Sparkles, Eye, ChevronDown } from 'lucide-react';
+
+interface MemoryCard {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  preview: string;
+  romanticMessage: string;
+}
 
 export const MemoriesSection: React.FC = () => {
-  const [photos, setPhotos] = useState<MemoryPhoto[]>([]);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const touchStartXRef = useRef<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Load photos from public/assets folder
-  useEffect(() => {
-    const loadedPhotos: MemoryPhoto[] = [];
+  const memoryCards: MemoryCard[] = [
+    {
+      id: 'smile',
+      title: 'Your Smile 😊',
+      icon: <Smile className="w-5 h-5 text-amber-300" />,
+      preview: 'The way everything gets a little brighter...',
+      romanticMessage:
+        'The way your eyes soften and light up whenever you smile genuinely... even on the most exhausting days, seeing you truly happy makes everything feel calm, peaceful, and right.',
+    },
+    {
+      id: 'conversations',
+      title: 'Those Random Conversations 💬',
+      icon: <MessageCircle className="w-5 h-5 text-pink-400" />,
+      preview: 'Talking about everything and nothing at all...',
+      romanticMessage:
+        'From deep late-night talks to the silly little debates only we understand. I never get tired of listening to your voice or hearing whatever thought just crossed your mind.',
+    },
+    {
+      id: 'fights',
+      title: 'The Little Fights 😤❤️',
+      icon: <Flame className="w-5 h-5 text-rose-400" />,
+      preview: 'When you argue like a little kid...',
+      romanticMessage:
+        'Even when you are being stubborn or trying to win an argument, you look adorable. Those playful little disagreements always end up making me smile anyway.',
+    },
+    {
+      id: 'moments',
+      title: 'The Moments That Made Me Smile ✨',
+      icon: <Sparkles className="w-5 h-5 text-amber-300" />,
+      preview: 'Little glimpses I keep in my heart...',
+      romanticMessage:
+        'The unexpected glances, the shared laughter over things nobody else noticed, and the quiet comfort of just knowing you are there beside me.',
+    },
+    {
+      id: 'unsaid',
+      title: 'Things I Never Said 💭',
+      icon: <Eye className="w-5 h-5 text-purple-300" />,
+      preview: 'What I often keep in my quiet thoughts...',
+      romanticMessage:
+        'I may not always say everything in the most poetic words, but I notice how kind you are, how hard you try, and how deeply I appreciate you in my life every single day.',
+    },
+    {
+      id: 'favorite',
+      title: 'My Favorite Memories 📸',
+      icon: <Heart className="w-5 h-5 text-rose-400 fill-rose-500/30" />,
+      preview: 'Every little chapter we have shared so far...',
+      romanticMessage:
+        'Every trip, every seminar, every shared silence, and every sweet moment we have had together has become a treasured memory I will keep in my heart forever.',
+    },
+  ];
 
-    // Known image files in public/assets/ — served at /assets/ by Vite
-    const assetImages = [
-      'WhatsApp Image 2026-09-28 at 23.45.33.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.40 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.40.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.41.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.42 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.42.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.43 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.43.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.44.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.45 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.45 (2).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.45.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.46 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.46.jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.47 (1).jpeg',
-      'WhatsApp Image 2026-09-28 at 23.51.47.jpeg',
-      'WhatsApp Image 2026-09-29 at 15.42.15.jpeg',
-      'WhatsApp Image 2026-09-29 at 15.42.16.jpeg',
-    ];
-
-    assetImages.forEach((filename, idx) => {
-      loadedPhotos.push({
-        id: `asset-${idx}`,
-        src: `/assets/${encodeURIComponent(filename)}`,
-        caption: `Memory #${idx + 1} ❤️`,
-        source: 'assets',
-      });
-    });
-
-    // Also load any locally uploaded user photos from localStorage for instant phone testing
-    try {
-      const stored = localStorage.getItem('niruththee_kishalan_photos');
-      if (stored) {
-        const parsed = JSON.parse(stored) as MemoryPhoto[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          loadedPhotos.push(...parsed);
-        }
-      }
-    } catch {
-      // Ignore storage errors
-    }
-
-    setPhotos(loadedPhotos);
-  }, []);
-
-  // Keyboard navigation (ESC, ArrowLeft, ArrowRight)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (lightboxIndex === null) return;
-      if (e.key === 'Escape') setLightboxIndex(null);
-      if (e.key === 'ArrowLeft') showPrev();
-      if (e.key === 'ArrowRight') showNext();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, photos.length]);
-
-  const showNext = () => {
-    if (lightboxIndex === null || photos.length === 0) return;
-    setLightboxIndex((lightboxIndex + 1) % photos.length);
-  };
-
-  const showPrev = () => {
-    if (lightboxIndex === null || photos.length === 0) return;
-    setLightboxIndex((lightboxIndex - 1 + photos.length) % photos.length);
-  };
-
-  // Touch Swipe Handlers for mobile lightbox
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchEndX - touchStartXRef.current;
-
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) {
-        showPrev();
-      } else {
-        showNext();
-      }
-    }
-    touchStartXRef.current = null;
-  };
-
-  // Allow uploading real photos directly on phone/browser to save into memories
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const newPhotos: MemoryPhoto[] = [];
-    const count = files.length;
-    let loaded = 0;
-
-    Array.from(files).forEach((file, i) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          newPhotos.push({
-            id: `uploaded-${Date.now()}-${i}`,
-            src: event.target.result as string,
-            caption: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-            source: 'uploaded',
-          });
-        }
-        loaded++;
-        if (loaded === count) {
-          const updated = [...photos, ...newPhotos];
-          setPhotos(updated);
-          try {
-            // Save only first 15 uploaded photos to stay within localStorage limits
-            localStorage.setItem('niruththee_kishalan_photos', JSON.stringify(updated.filter(p => p.source === 'uploaded').slice(0, 15)));
-          } catch {
-            // Quota exceeded
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+  const handleCardToggle = (id: string) => {
+    setExpandedId(prev => (prev === id ? null : id));
   };
 
   return (
-    <section id="memories" className="relative py-16 sm:py-24 px-4 sm:px-6 max-w-6xl mx-auto z-10">
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-        className="hidden"
-        onChange={handlePhotoUpload}
-      />
+    <section id="memories" className="relative py-16 sm:py-28 mobile-safe-padding px-4 sm:px-6 max-w-5xl mx-auto z-10 w-full overflow-x-hidden">
+      {/* Subtle ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[650px] h-[350px] sm:h-[650px] bg-rose-900/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Section Header */}
-      <div className="text-center mb-10 sm:mb-14">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs font-medium tracking-wide mb-3">
-          <Camera className="w-3.5 h-3.5 text-rose-400" />
-          <span>Our Photo Gallery</span>
+      {/* Header */}
+      <div className="text-center mb-14 sm:mb-18">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-pill text-rose-300 text-xs font-medium tracking-widest uppercase mb-3">
+          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-500/30" />
+          <span>Keepsakes</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif-display font-bold text-rose-50 text-glow">
-          Evidence That We Actually Have Fun Together 📸
+        <h2 className="font-serif-display font-bold text-rose-50 text-glow px-1 break-words [font-size:clamp(1.7rem,7vw,3.1rem)]">
+          Little Things I Remember
         </h2>
-        <p className="mt-2 text-xs sm:text-sm text-rose-200/70 max-w-md mx-auto">
-          Every picture with you is my favorite picture.
+        <p className="mt-3 text-xs sm:text-sm text-rose-200/70 max-w-md mx-auto font-light leading-relaxed">
+          The small, everyday details and little moments that make you so special to me. Tap any card to open.
         </p>
-
-        {/* Upload real memories button */}
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card hover:border-rose-400/50 text-xs font-medium text-rose-200 hover:text-white transition-all duration-200 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 text-rose-400" />
-            <span>Add Our Real Photos 📸</span>
-          </button>
-        </div>
       </div>
 
-      {/* Gallery display */}
-      {photos.length > 0 ? (
-        <div className="columns-1 sm:columns-2 md:columns-3 gap-4 sm:gap-6 space-y-4 sm:space-y-6">
-          {photos.map((photo, index) => (
+      {/* Interactive Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {memoryCards.map((card) => {
+          const isExpanded = expandedId === card.id;
+
+          return (
             <div
-              key={photo.id}
-              onClick={() => setLightboxIndex(index)}
-              className="group relative break-inside-avoid rounded-2xl sm:rounded-3xl overflow-hidden glass-card p-1.5 sm:p-2 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-rose-950/60 hover:border-rose-400/50"
+              key={card.id}
+              onClick={() => handleCardToggle(card.id)}
+              className={`group relative w-full p-5 sm:p-7 rounded-3xl cursor-pointer transition-all duration-300 border select-none min-h-[44px] active:scale-[0.99] ${
+                isExpanded
+                  ? 'glass-panel-glow border-rose-400/50 shadow-2xl shadow-rose-950/70 scale-[1.02]'
+                  : 'glass-card border-rose-500/20 hover:border-rose-400/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-950/50'
+              }`}
             >
-              <div className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl bg-black/40">
-                <img
-                  src={photo.src}
-                  alt={photo.caption || 'Niruththee & Kishalan memory'}
-                  loading="lazy"
-                  className="w-full h-auto object-cover transform transition-transform duration-500 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                  <span className="text-xs sm:text-sm font-medium text-rose-100 text-glow">
-                    {photo.caption || 'Tap to view ❤️'}
-                  </span>
+              {/* Top Row: Icon + Expand Indicator */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-rose-950/60 border border-rose-500/30 flex items-center justify-center shadow-md">
+                  {card.icon}
+                </div>
+
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-rose-400 transition-transform duration-300 ${
+                    isExpanded ? 'rotate-180 bg-rose-500/20 text-rose-200' : 'group-hover:translate-y-0.5'
+                  }`}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h3 className="text-lg sm:text-xl font-serif-display font-bold text-rose-100 group-hover:text-rose-200 transition-colors">
+                {card.title}
+              </h3>
+
+              {/* Short Preview (always shown) */}
+              <p className="mt-2 text-xs sm:text-sm text-rose-300/70 font-light leading-relaxed">
+                {card.preview}
+              </p>
+
+              {/* Expanded Romantic Message */}
+              <div
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  isExpanded ? 'max-h-60 opacity-100 mt-4 pt-4 border-t border-rose-500/20' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <p className="text-xs sm:text-sm text-rose-100/90 font-light leading-relaxed font-serif-display text-[15px] sm:text-[16px] text-glow-soft">
+                  "{card.romanticMessage}"
+                </p>
+                <div className="mt-3 flex items-center gap-1.5 text-[11px] text-rose-400/70 font-mono tracking-wider">
+                  <Heart className="w-3 h-3 fill-rose-500/40" />
+                  <span>Forever remembered</span>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        /* Friendly empty state adhering to "DO NOT use fake / stock photos" rule */
-        <div className="p-8 sm:p-12 rounded-3xl glass-panel-glow border border-dashed border-rose-500/30 text-center max-w-lg mx-auto">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-rose-950/60 border border-rose-500/30 flex items-center justify-center text-rose-400">
-            <ImageIcon className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-serif-display font-semibold text-rose-100">
-            Ready for our real photos ❤️
-          </h3>
-          <p className="mt-2 text-xs sm:text-sm text-rose-200/70 leading-relaxed">
-            Drop your photos into the project's <code className="px-1.5 py-0.5 rounded bg-black/40 text-rose-300">/assets</code> folder or tap below to upload them directly from your phone or laptop!
-          </p>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-medium shadow-lg shadow-rose-950 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Select Photos of Us 📸</span>
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-          </button>
-        </div>
-      )}
-
-      {/* Full-Screen Lightbox */}
-      {lightboxIndex !== null && photos[lightboxIndex] && (
-        <div
-          onClick={() => setLightboxIndex(null)}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 animate-fadeIn select-none"
-        >
-          {/* Top Bar with Counter and Close Button */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-5xl flex items-center justify-between z-10 pt-2"
-          >
-            <div className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs sm:text-sm font-medium text-rose-100">
-              {lightboxIndex + 1} / {photos.length}
-            </div>
-
-            <button
-              onClick={() => setLightboxIndex(null)}
-              className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Close lightbox"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Central Image Container */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative flex-1 w-full max-w-4xl flex items-center justify-center my-3 overflow-hidden"
-          >
-            <img
-              src={photos[lightboxIndex].src}
-              alt={photos[lightboxIndex].caption || 'Enlarged photo'}
-              className="max-h-[75vh] max-w-full w-auto object-contain rounded-xl sm:rounded-2xl shadow-2xl border border-rose-500/20"
-            />
-          </div>
-
-          {/* Bottom Bar: Prev / Caption / Next */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg flex items-center justify-between gap-4 pb-2"
-          >
-            <button
-              onClick={showPrev}
-              className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-
-            <span className="text-xs sm:text-sm text-rose-200/90 text-center truncate max-w-[200px]">
-              {photos[lightboxIndex].caption || 'Swipe left/right on mobile'}
-            </span>
-
-            <button
-              onClick={showNext}
-              className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Next image"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </section>
   );
 };

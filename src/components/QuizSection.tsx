@@ -1,158 +1,140 @@
 import React, { useState } from 'react';
-import { HelpCircle, Check, X, Sparkles, RefreshCw, Trophy } from 'lucide-react';
-import { fireHeartConfetti, fireGrandCelebration } from '../utils/confetti';
+import { Heart, Sparkles, Check, X, ArrowRight, RefreshCw, Trophy } from 'lucide-react';
+import { fireHeartConfetti } from '../utils/confetti';
 
-interface QuizQuestionItem {
+interface QuizItem {
   id: number;
   question: string;
   options: {
+    letter: string;
     text: string;
     isCorrect: boolean;
-    feedback: string;
   }[];
+  correctFeedback: string;
+  incorrectFeedback: string;
 }
 
-export const QuizSection: React.FC = () => {
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+interface RomanticQuizProps {
+  onComplete?: () => void;
+}
 
-  // Exactly 3 questions as specified
-  const questions: QuizQuestionItem[] = [
+export const QuizSection: React.FC<RomanticQuizProps> = ({ onComplete }) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const quizzes: QuizItem[] = [
     {
       id: 1,
-      question: 'What is my favorite thing to do with you?',
+      question: 'Where did Kishalan first notice Niruthee?',
       options: [
-        {
-          text: 'Talk for hours until late night 🌙',
-          isCorrect: true,
-          feedback: 'Yes! And never getting tired of your voice ❤️',
-        },
-        {
-          text: 'Annoy you until you get mad (and look cute) 😂',
-          isCorrect: true,
-          feedback: 'Haha 100% accurate! It is my primary life hobby 😌',
-        },
-        {
-          text: 'Steal all your attention 24/7 🥺',
-          isCorrect: true,
-          feedback: 'Guilty as charged! You are my priority ✨',
-        },
-        {
-          text: 'All of the above (especially annoying you) ❤️',
-          isCorrect: true,
-          feedback: 'PERFECT ANSWER! You know me too well 🥹😂',
-        },
+        { letter: 'A', text: 'Puthukkudiyiruppu Central College', isCorrect: true },
+        { letter: 'B', text: 'Vidhtyanatha School', isCorrect: false },
+        { letter: 'C', text: 'University of Moratuwa', isCorrect: false },
+        { letter: 'D', text: 'Dreamway office', isCorrect: false },
       ],
+      correctFeedback: 'You remembered ❤️',
+      incorrectFeedback: 'Almost 😌 Try to remember that first moment.',
     },
     {
       id: 2,
-      question: 'Who is more stubborn between us?',
+      question: 'Where did Kishalan and Niruthee first have a memorable conversation?',
       options: [
-        {
-          text: 'me',
-          isCorrect: true,
-          feedback: 'YES! Honesty looks beautiful on you! 😂🥇',
-        },
-        {
-          text: 'Kishalan 😇',
-          isCorrect: false,
-          feedback: 'Lies detected! 🚨 Me? Stubborn? Never! Try again 😌',
-        },
-        {
-          text: 'Both of us equally 🤷‍♀️',
-          isCorrect: false,
-          feedback: 'Nice try avoiding accountability! You know the real answer 😏',
-        },
+        { letter: 'A', text: 'During a Chemistry seminar', isCorrect: true },
+        { letter: 'B', text: 'At a birthday party', isCorrect: false },
+        { letter: 'C', text: 'At the beach', isCorrect: false },
+        { letter: 'D', text: 'At university', isCorrect: false },
       ],
+      correctFeedback: 'You remembered ❤️',
+      incorrectFeedback: 'Almost 😌 Try to remember that Chemistry seminar practical.',
     },
     {
       id: 3,
-      question: 'Who says sorry first?',
+      question: 'Who made this little birthday website?',
       options: [
-        {
-          text: 'me',
-          isCorrect: true,
-          feedback: 'CORRECT! Even if it takes a little drama first 😌❤️',
-        },
-        {
-          text: 'Kishalan always 😌',
-          isCorrect: false,
-          feedback: 'I mean I might yield to your cute face, but the quiz says you! 😂',
-        },
-        {
-          text: 'Neither, we just act like nothing happened 🤫',
-          isCorrect: false,
-          feedback: 'Haha too real! But pick the honest answer 🙃',
-        },
+        { letter: 'A', text: 'Google 😄', isCorrect: false },
+        { letter: 'B', text: 'Your secret admirer 👀', isCorrect: false },
+        { letter: 'C', text: 'Kishalan ❤️', isCorrect: true },
+        { letter: 'D', text: 'Your best friend', isCorrect: false },
       ],
+      correctFeedback: 'Of course you knew that ❤️',
+      incorrectFeedback: 'Hey! It was Kishalan with all his heart 😌❤️',
     },
   ];
 
-  const currentQ = questions[currentIdx];
+  const currentQuiz = quizzes[currentIdx];
 
   const handleSelectOption = (idx: number) => {
-    if (showFeedback && currentQ.options[selectedOption!].isCorrect) return;
+    if (hasAnswered) return;
 
-    setSelectedOption(idx);
-    setShowFeedback(true);
+    setSelectedIdx(idx);
+    setHasAnswered(true);
 
-    const isCorrect = currentQ.options[idx].isCorrect;
+    const isCorrect = currentQuiz.options[idx].isCorrect;
     if (isCorrect) {
+      setScore((prev) => prev + 1);
       fireHeartConfetti();
-      setTimeout(() => {
-        if (currentIdx < questions.length - 1) {
-          setCurrentIdx(currentIdx + 1);
-          setSelectedOption(null);
-          setShowFeedback(false);
-        } else {
-          setIsCompleted(true);
-          fireGrandCelebration();
-        }
-      }, 1500);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIdx < quizzes.length - 1) {
+      setCurrentIdx((prev) => prev + 1);
+      setSelectedIdx(null);
+      setHasAnswered(false);
+    } else {
+      setIsFinished(true);
+      if (onComplete) onComplete();
     }
   };
 
   const handleRestart = () => {
     setCurrentIdx(0);
-    setSelectedOption(null);
-    setShowFeedback(false);
-    setIsCompleted(false);
+    setSelectedIdx(null);
+    setHasAnswered(false);
+    setScore(0);
+    setIsFinished(false);
   };
 
   return (
-    <section id="quiz" className="relative py-16 sm:py-24 px-4 sm:px-6 max-w-2xl mx-auto z-10">
+    <section id="quiz" className="relative py-16 sm:py-28 mobile-safe-padding px-4 sm:px-6 max-w-2xl mx-auto z-10 w-full overflow-x-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-rose-950/15 rounded-full blur-[140px] pointer-events-none" />
+
       {/* Header */}
-      <div className="text-center mb-10 sm:mb-12">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-medium tracking-wide mb-3">
-          <HelpCircle className="w-3.5 h-3.5 text-pink-400" />
-          <span>The Ultimate Girlfriend Test</span>
+      <div className="text-center mb-12 sm:mb-16">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-pill text-rose-300 text-xs font-medium tracking-widest uppercase mb-3">
+          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-500/30" />
+          <span>Romantic Quiz</span>
+          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-500/30" />
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif-display font-bold text-rose-50 text-glow">
-          Since You're My Girlfriend... 👀
+        <h2 className="font-serif-display font-bold text-rose-50 text-glow px-1 break-words [font-size:clamp(1.65rem,7vw,3rem)]">
+          How Well Do You Know Us? ❤️
         </h2>
-        <p className="mt-2 text-xs sm:text-sm text-rose-200/70">
-          You should definitely know this.
+        <p className="mt-3 text-xs sm:text-sm text-rose-200/70 max-w-sm mx-auto font-light leading-relaxed">
+          Let's see if you remember our little story...
         </p>
       </div>
 
-      {!isCompleted ? (
-        <div className="p-6 sm:p-8 rounded-3xl glass-panel-glow border border-rose-400/30 shadow-2xl shadow-rose-950/70">
-          {/* Progress Indicator */}
-          <div className="flex items-center justify-between mb-6 text-xs text-rose-300">
-            <span className="font-semibold uppercase tracking-wider">
-              Question {currentIdx + 1} of {questions.length}
+      {!isFinished ? (
+        /* Quiz Card */
+        <div className="w-full p-5 sm:p-9 rounded-3xl glass-panel-glow border border-rose-400/30 shadow-2xl shadow-rose-950/80 animate-fadeIn">
+          {/* Top Progress Indicator */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-rose-500/20 text-xs text-rose-300">
+            <span className="font-semibold uppercase tracking-wider font-mono">
+              Question {currentIdx + 1} of {quizzes.length}
             </span>
-            <div className="flex gap-1.5">
-              {questions.map((_, i) => (
+            <div className="flex gap-2">
+              {quizzes.map((_, i) => (
                 <div
                   key={i}
-                  className={`w-6 h-1.5 rounded-full transition-all duration-300 ${
+                  className={`w-7 h-1.5 rounded-full transition-all duration-300 ${
                     i === currentIdx
-                      ? 'bg-rose-500 shadow-sm shadow-rose-500'
+                      ? 'bg-rose-500 shadow-sm shadow-rose-400'
                       : i < currentIdx
-                      ? 'bg-emerald-500/80'
+                      ? 'bg-pink-400/80'
                       : 'bg-white/10'
                   }`}
                 />
@@ -161,43 +143,52 @@ export const QuizSection: React.FC = () => {
           </div>
 
           {/* Question Text */}
-          <h3 className="text-lg sm:text-xl font-serif-display font-semibold text-rose-100 mb-6 leading-snug">
-            {currentQ.question}
+          <h3 className="text-lg sm:text-xl md:text-2xl font-serif-display font-bold text-rose-100 mb-6 leading-snug">
+            {currentQuiz.question}
           </h3>
 
-          {/* Answer Options */}
+          {/* Options */}
           <div className="space-y-3">
-            {currentQ.options.map((opt, optIdx) => {
-              const isSelected = selectedOption === optIdx;
-              const showResult = isSelected && showFeedback;
+            {currentQuiz.options.map((opt, idx) => {
+              const isSelected = selectedIdx === idx;
+              const showResult = hasAnswered;
 
-              let btnStyle =
-                'border-white/10 bg-white/5 hover:bg-white/10 hover:border-rose-400/40 text-rose-100';
+              let btnClasses =
+                'border-rose-500/20 bg-white/5 hover:bg-rose-500/10 hover:border-rose-400/40 text-rose-100';
 
               if (showResult) {
                 if (opt.isCorrect) {
-                  btnStyle =
-                    'border-emerald-400 bg-emerald-950/40 text-emerald-200 shadow-lg shadow-emerald-950';
+                  btnClasses =
+                    'border-emerald-400/80 bg-emerald-950/40 text-emerald-200 shadow-lg shadow-emerald-950';
+                } else if (isSelected && !opt.isCorrect) {
+                  btnClasses =
+                    'border-rose-500 bg-rose-950/60 text-rose-200 animate-shake';
                 } else {
-                  btnStyle =
-                    'border-rose-500/80 bg-rose-950/50 text-rose-200 animate-shake';
+                  btnClasses = 'opacity-40 border-white/5 bg-transparent text-rose-300/40';
                 }
               }
 
               return (
                 <button
-                  key={optIdx}
-                  onClick={() => handleSelectOption(optIdx)}
-                  className={`w-full min-h-[52px] p-4 rounded-2xl border text-left text-sm sm:text-base font-medium flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer active:scale-[0.99] ${btnStyle}`}
+                  key={idx}
+                  onClick={() => handleSelectOption(idx)}
+                  disabled={hasAnswered}
+                  className={`w-full min-h-[52px] p-4 rounded-2xl border text-left text-sm sm:text-base font-medium flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer active:scale-[0.99] select-none ${btnClasses}`}
                 >
-                  <span className="leading-snug">{opt.text}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 min-w-8 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-xs font-mono text-rose-300 shrink-0">
+                      {opt.letter}
+                    </span>
+                    <span className="leading-snug break-words">{opt.text}</span>
+                  </div>
+
                   {showResult && (
                     <span className="flex-shrink-0">
                       {opt.isCorrect ? (
-                        <Check className="w-5 h-5 text-emerald-400" />
-                      ) : (
+                        <Check className="w-5 h-5 text-emerald-400 animate-bounce" />
+                      ) : isSelected ? (
                         <X className="w-5 h-5 text-rose-400" />
-                      )}
+                      ) : null}
                     </span>
                   )}
                 </button>
@@ -205,43 +196,64 @@ export const QuizSection: React.FC = () => {
             })}
           </div>
 
-          {/* Teasing feedback note */}
-          {showFeedback && selectedOption !== null && (
-            <div className="mt-5 p-3.5 rounded-2xl bg-white/5 border border-rose-500/20 text-center animate-fadeIn">
-              <p
-                className={`text-xs sm:text-sm font-medium ${
-                  currentQ.options[selectedOption].isCorrect
-                    ? 'text-emerald-300'
-                    : 'text-rose-300'
-                }`}
+          {/* Feedback & Continue */}
+          {hasAnswered && (
+            <div className="mt-6 pt-5 border-t border-rose-500/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 animate-fadeIn">
+              <div className="flex items-center gap-2 text-center sm:text-left">
+                {currentQuiz.options[selectedIdx!].isCorrect ? (
+                  <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+                ) : (
+                  <Heart className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                )}
+                <p
+                  className={`text-xs sm:text-sm font-serif-display text-base font-medium ${
+                    currentQuiz.options[selectedIdx!].isCorrect
+                      ? 'text-emerald-300 text-glow-soft'
+                      : 'text-rose-300'
+                  }`}
+                >
+                  {currentQuiz.options[selectedIdx!].isCorrect
+                    ? currentQuiz.correctFeedback
+                    : currentQuiz.incorrectFeedback}
+                </p>
+              </div>
+
+              <button
+                onClick={handleNext}
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-sm font-semibold shadow-lg shadow-rose-950 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
-                {currentQ.options[selectedOption].feedback}
-              </p>
+                <span>{currentIdx < quizzes.length - 1 ? 'Next Question' : 'See Score'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
       ) : (
-        /* Final celebration card */
-        <div className="p-8 sm:p-10 rounded-3xl glass-panel-glow border-2 border-rose-400/40 text-center shadow-2xl shadow-rose-950 animate-fadeIn">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white shadow-xl shadow-rose-900/50">
+        /* End of Quizzes Card */
+        <div className="w-full p-7 sm:p-12 rounded-3xl glass-panel-glow border-2 border-rose-400/40 text-center shadow-2xl shadow-rose-950 animate-fadeIn">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-400 flex items-center justify-center text-white shadow-xl shadow-rose-900/50 animate-bounce">
             <Trophy className="w-8 h-8" />
           </div>
 
-          <h3 className="text-2xl sm:text-3xl font-serif-display font-bold text-rose-50 text-glow">
-            You Know Me So Well! ❤️😂
+          <h3 className="text-3xl sm:text-4xl font-serif-display font-bold text-rose-50 text-glow mb-2">
+            {score === 3 ? '3 / 3 ❤️' : `${score} / 3 ❤️`}
           </h3>
 
-          <p className="mt-3 text-sm text-rose-200/80 max-w-sm mx-auto leading-relaxed">
-            100% girlfriend accuracy score verified. You truly understand my teasing ways.
+          <p className="mt-3 text-base sm:text-lg font-serif-display text-rose-100 max-w-md mx-auto leading-relaxed text-glow-soft">
+            {score === 3
+              ? 'You know our little story better than I expected.'
+              : 'Looks like we need to make a few more memories 😌❤️'}
           </p>
 
-          <button
-            onClick={handleRestart}
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-xs font-semibold text-rose-200 transition-colors cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Retake Quiz</span>
-          </button>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleRestart}
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px] px-5 py-3 rounded-full glass-card hover:border-rose-400/50 text-sm font-semibold text-rose-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retake Quizzes</span>
+            </button>
+          </div>
         </div>
       )}
     </section>

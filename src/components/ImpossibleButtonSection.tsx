@@ -58,7 +58,7 @@ export const ImpossibleButtonSection: React.FC<ImpossibleButtonProps> = ({ onSuc
   };
 
   return (
-    <section id="impossible-button" className="relative py-16 sm:py-24 px-4 sm:px-6 max-w-xl mx-auto z-10 text-center">
+    <section id="impossible-button" className="relative py-16 sm:py-24 mobile-safe-padding px-4 sm:px-6 max-w-xl mx-auto z-10 text-center w-full overflow-x-hidden">
       {/* Header */}
       <div className="mb-10">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif-display font-bold text-rose-50 text-glow">
@@ -72,7 +72,7 @@ export const ImpossibleButtonSection: React.FC<ImpossibleButtonProps> = ({ onSuc
       {/* Button Stage Area */}
       <div
         ref={containerRef}
-        className="relative min-h-[220px] flex flex-col items-center justify-center p-6 rounded-3xl glass-panel-glow border border-rose-500/20 shadow-2xl"
+        className="relative min-h-[220px] flex flex-col items-center justify-center p-5 sm:p-6 rounded-3xl glass-panel-glow border border-rose-500/20 shadow-2xl overflow-hidden w-full"
       >
         {!isWon ? (
           <div className="flex flex-col items-center justify-center w-full">
@@ -84,7 +84,7 @@ export const ImpossibleButtonSection: React.FC<ImpossibleButtonProps> = ({ onSuc
                 transform: `translate(${position.x}px, ${position.y}px)`,
                 transition: 'transform 0.15s ease-out',
               }}
-              className="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-semibold text-sm sm:text-base shadow-xl shadow-red-950/70 border border-red-400/40 cursor-pointer active:scale-95 flex items-center gap-2 select-none"
+              className="px-6 py-3.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-semibold text-sm sm:text-base shadow-xl shadow-red-950/70 border border-red-400/40 cursor-pointer active:scale-95 flex items-center gap-2 select-none max-w-full"
             >
               <Ban className="w-4 h-4 text-red-200" />
               <span>🚫 Don't Click This</span>

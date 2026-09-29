@@ -3,50 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { OpeningScreen } from './components/OpeningScreen';
 import { BackgroundStars } from './components/BackgroundStars';
 import { AudioPlayer } from './components/AudioPlayer';
-import { QuickNav } from './components/QuickNav';
+import { ScrollNotifications } from './components/ScrollNotifications';
 import { HeroSection } from './components/HeroSection';
-import { FunIntroSection } from './components/FunIntroSection';
-import { MemoriesSection } from './components/MemoriesSection';
 import { StorySection } from './components/StorySection';
-import { AwardsSection } from './components/AwardsSection';
+import { MemoriesSection } from './components/MemoriesSection';
+import { PhotoGallerySection } from './components/PhotoGallerySection';
 import { LoveLetterSection } from './components/LoveLetterSection';
 import { QuizSection } from './components/QuizSection';
 import { ImpossibleButtonSection } from './components/ImpossibleButtonSection';
-import { GiftSection } from './components/GiftSection';
+import { BirthdayMomentSection } from './components/BirthdayMomentSection';
 import { FinalSection } from './components/FinalSection';
 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
-  const [activeSection, setActiveSection] = useState('hero');
-
-  // Track active section for clean navigation highlights
-  useEffect(() => {
-    if (!hasEntered) return;
-
-    const sections = ['hero', 'reasons', 'memories', 'story', 'awards', 'letter', 'quiz', 'impossible-button', 'gift', 'final'];
-    
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
-      for (const sectionId of sections) {
-        const el = document.getElementById(sectionId);
-        if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveSection(sectionId);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasEntered]);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -56,11 +29,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08030d] text-rose-100 selection:bg-rose-500/30 selection:text-rose-100 relative">
-      {/* Ambient background stars & romantic particles */}
+    <div className="min-h-screen bg-[#05010a] text-rose-100 selection:bg-rose-500/30 selection:text-rose-100 relative overflow-x-hidden">
+      {/* Ambient background stars, nebula & floating romantic particles */}
       <BackgroundStars />
 
-      {/* Opening Loading / Warning Screen */}
+      {/* Opening Loading Screen */}
       {!hasEntered && (
         <OpeningScreen onEnter={() => setHasEntered(true)} />
       )}
@@ -68,42 +41,39 @@ export default function App() {
       {/* Main Experience */}
       {hasEntered && (
         <>
-          {/* Top Navigation */}
-          <QuickNav activeSection={activeSection} onNavigate={scrollToSection} />
+          {/* Subtle scroll-based notifications from Kishalan */}
+          <ScrollNotifications />
 
-          {/* Persistent Floating Audio Player */}
+          {/* Minimal Floating Glass Music Player */}
           <AudioPlayer />
 
-          {/* Content Container */}
-          <main className="relative z-10 pt-16">
-            {/* Section 1: Hero */}
-            <HeroSection onNext={() => scrollToSection('reasons')} />
+          {/* Continuous Romantic Story */}
+          <main className="relative z-10 w-full max-w-full overflow-x-hidden pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))]">
+            {/* 1. Hero */}
+            <HeroSection onNext={() => scrollToSection('journey')} />
 
-            {/* Section 2: Fun Intro (3 Reasons) */}
-            <FunIntroSection />
-
-            {/* Section 3: Memories Gallery & Lightbox */}
-            <MemoriesSection />
-
-            {/* Section 4: Our Story Timeline */}
+            {/* 2. Our Little Journey */}
             <StorySection />
 
-            {/* Section 5: Official Girlfriend Awards */}
-            <AwardsSection />
+            {/* 3. Memories */}
+            <MemoriesSection />
 
-            {/* Section 6: Love Letter with Typewriter */}
+            {/* 4. Photo Gallery */}
+            <PhotoGallerySection />
+
+            {/* 5. Special Letter */}
             <LoveLetterSection />
 
-            {/* Section 7: Fun Quiz */}
-            <QuizSection />
+            {/* 6. 3 Romantic Quizzes */}
+            <QuizSection onComplete={() => scrollToSection('impossible-button')} />
 
-            {/* Section 8: Impossible Button */}
-            <ImpossibleButtonSection onSuccess={() => scrollToSection('gift')} />
+            {/* 7. EXISTING GAME — UNTOUCHED */}
+            <ImpossibleButtonSection onSuccess={() => scrollToSection('birthday-moment')} />
 
-            {/* Section 9: Birthday Gift Reveal */}
-            <GiftSection onRevealed={() => scrollToSection('final')} />
+            {/* 8. Birthday Wish */}
+            <BirthdayMomentSection />
 
-            {/* Section 10: Final Closing & Signature */}
+            {/* 9. Final Message */}
             <FinalSection onScrollToTop={() => scrollToSection('hero')} />
           </main>
         </>
